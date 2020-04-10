@@ -1,6 +1,7 @@
 "use strict";
 
 import { Mathf } from "./math.js"
+import { Bounds } from './bounds.js';
 
 
 class Player {
@@ -12,18 +13,63 @@ class Player {
         this.height = sprite.height;
         this.x = x;
         this.y = y;
+        // FIXME
+        this.localCollider = new Bounds(5,5,sprite.width-10,sprite.height-10);
+    }
+
+    get collider() {
+        return new Bounds(
+            this.localCollider.minX + this.x,
+            this.localCollider.minY + this.y,
+            this.localCollider.width, 
+            this.localCollider.height);
     }
 
     // update player
     // - controller is Controller class
     // - bounds is current zone bounds, expected to have width/height properties
-    update(controller, step, bounds) {
+    update(zone, controller, step, bounds) {
         // parameter step is the time between frames ( in seconds )
         // check controls and move the player accordingly
-        if (controller.left) this.x -= this.speed * step;
-        if (controller.up) this.y -= this.speed * step;
-        if (controller.right) this.x += this.speed * step;
-        if (controller.down) this.y += this.speed * step;
+        let saveY = this.y;
+        var moveX = 0;
+        var moveY = 0;
+        if (controller.left || controller.right) {
+            //var saveX = this.x;
+            if (controller.left) {
+                this.x -= this.speed * step;
+            } else {
+                this.x += this.speed * step;
+            }
+            var collider = this.collider;
+            var hit = zone.collider.hit(collider);
+            if (hit) {
+                if (controller.left) {
+                    this.x = hit.maxX + (this.x-collider.minX) + 1;
+                } else {
+                    this.x = hit.minX - (collider.width + collider.minX-this.x) - 1;
+                }
+            }
+        }
+        if (controller.up || controller.down) {
+            //var saveX = this.x;
+            if (controller.up) {
+                this.y -= this.speed * step;
+            } else {
+                this.y += this.speed * step;
+            }
+            var collider = this.collider;
+            var hit = zone.collider.hit(collider);
+            if (hit) {
+                if (controller.up) {
+                    //this.x = hit.maxX + (this.x-collider.minX) + 1;
+                    this.y = hit.maxY + (this.y-collider.minY) + 1;
+                } else {
+                    //this.x = hit.minX - (collider.width + collider.minX-this.x) - 1;
+                    this.y = hit.minY - (collider.height + collider.minY-this.y) - 1;
+                }
+            }
+        }
 
         // don't let player leaves the world's boundary
         var minX = this.width/2;
@@ -36,6 +82,9 @@ class Player {
 
     draw(ctx) {
         ctx.drawImage(this.sprite.img, this.x, this.y);
+        if (ctx.dbgCollider) {
+            this.collider.draw(ctx);
+        }
     }
 }
 

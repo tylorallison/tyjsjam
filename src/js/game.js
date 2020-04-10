@@ -17,8 +17,8 @@ class Game {
     constructor() {
         this.canvas = document.getElementById("gameCanvas");
         this.ctx = this.canvas.getContext("2d");
-        this.then;
-        this.camera;
+        this.ctx.dbgCollider = true;
+        this.then; this.camera;
         this.player;
         this.controller;
         // game settings:	
@@ -51,13 +51,16 @@ class Game {
 
         // current zone is starting zone
         this.zone = this.zones.startingZone;
-        this.bounds = {width: this.zone.width*this.sprites.spriteSize, height: this.zone.height*this.sprites.spriteSize};
+        this.bounds = {width: this.zone.gwidth*this.sprites.spriteSize, height: this.zone.gheight*this.sprites.spriteSize};
 
         // setup tiles
         this.tiles = []
         this.zone.walk( (layer) => {
             layer.walk( (x,y,v) => {
                 var t = new Tile(x*this.sprites.spriteSize, y*this.sprites.spriteSize, v, this.sprites.get(v));
+                if (t.collider) {
+                    this.zone.collider.add(t.collider);
+                }
                 this.tiles.push(t);
             });
         });
@@ -78,7 +81,7 @@ class Game {
 
     // Game update function
     update() {
-        this.player.update(this.controller, this.STEP, this.bounds);
+        this.player.update(this.zone, this.controller, this.STEP, this.bounds);
         this.camera.update();
     }
 

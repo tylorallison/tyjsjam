@@ -12,6 +12,11 @@ class Mathf {
         val = parseInt(val);
         return val > max ? max : val < min ? min : val;
     }
+
+    static floorInt(val, base) {
+        return parseInt(val/base);
+    }
+
 }
 
 export { Mathf };
